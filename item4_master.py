@@ -5,7 +5,7 @@ import json
 import csv
 import re
 
-REMOTE_IP = "10.12.51.154"
+REMOTE_IP = "10.12.63.254"
 
 def generate_config(t):
     with open("config.txt", 'w') as f:
