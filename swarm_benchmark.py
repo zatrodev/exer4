@@ -64,7 +64,8 @@ def run_swarm_iteration(n, t):
         ]
         slave_procs.append(subprocess.Popen(ssh_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL))
         
-    time.sleep(3) # Await SSH handshakes and TCP binds resolving natively across the LAN
+    # Extended sleep allows UPLB nodes to fully boot heavily laden NFS environment scripts
+    time.sleep(5) 
     
     print(f"Executing Master payload sequentially on Drone {MASTER_DRONE_IP}...")
     
@@ -85,18 +86,18 @@ def run_swarm_iteration(n, t):
     # Native output routing
     print("\n" + out.strip() + "\n")
     
-    elapsed = 0.0
     match = re.search(r"Master Time Elapsed[^\d]+([\d\.]+)\s*seconds", out)
     if match:
         elapsed = float(match.group(1))
+        # Await Drone node shutdown signaling organically
+        for p in slave_procs:
+            p.wait()
+        return elapsed
     else:
-        print("[!] Swarm execution failed or SSH credentials blocked!")
-    
-    # Await Drone node shutdown signaling
-    for p in slave_procs:
-        p.wait()
-        
-    return elapsed
+        print("[!] Master failed to synchronize. Purging hanging drone SSH connections...")
+        for p in slave_procs:
+            p.kill()  # Hard-wipe hanging sockets to prevent memory leaks!
+        return 0.0
 
 def main():
     n_params = [4000, 8000, 16000]
@@ -122,8 +123,18 @@ def main():
             for t in t_params:
                 print(f"\n[ORCHESTRATING CLUSTER FOR N={n} | Drones={t}]")
                 times = []
-                for _ in range(3):
-                    times.append(run_swarm_iteration(n, t))
+                for rep in range(3):
+                    # Smart Retry Mechanism
+                    success_time = 0.0
+                    for attempt in range(1, 6): # Try up to 5 times
+                        val = run_swarm_iteration(n, t)
+                        if val > 0.0:
+                            success_time = val
+                            break
+                        print(f"--- Retrying benchmark phase (Attempt {attempt}/5) in 5 seconds... ---")
+                        time.sleep(5)
+                        
+                    times.append(success_time)
                 
                 avg = sum(times) / 3.0
                 print(f"Iteration Avg: {avg:.4f}s")
