@@ -125,6 +125,7 @@ fn main() {
                         .read_exact(&mut ack_buf)
                         .expect("Failed to read ACK buffer.");
                     assert_eq!(&ack_buf, b"ack", "Invalid ACK checksum.");
+                    println!("[Master] Received ACK from {}. Dispatched: {} elements (equivalent to {} columns).", addr, chunk.len(), chunk.len() / n);
                 });
                 handles.push(handle);
             }
@@ -177,6 +178,8 @@ fn main() {
 
             // Dispatch return confirmation packet directly through standard out
             stream.write_all(b"ack").expect("Failed to send ACK signal");
+            println!("[Slave] Submatrix block buffered securely. Explicit ACK dispatched back to Master.");
+            println!("[Slave] Payload volume parsed: {} elements (equivalent to {} columns).", expected_elements, expected_elements / n);
 
             // Compute elapsed instantly after byte transfer success
             let time_after = Instant::now();

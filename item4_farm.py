@@ -39,7 +39,7 @@ def run_farm():
             for i in range(t):
                 port = 8001 + i
                 cmd = ["cargo", "run", "--release", "--quiet", "--", str(n), str(port), "1", "config.txt"]
-                procs.append(subprocess.Popen(cmd, stdout=subprocess.DEVNULL))
+                procs.append(subprocess.Popen(cmd))
                 
             time.sleep(1.5) # Allow the network stack to flush and bind all the ports natively
             conn.sendall(b"READY")

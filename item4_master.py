@@ -5,7 +5,7 @@ import json
 import csv
 import re
 
-REMOTE_IP = "10.12.63.254"
+REMOTE_IP = "10.231.89.132"
 
 def generate_config(t):
     with open("config.txt", 'w') as f:
@@ -36,6 +36,10 @@ def run_iteration(n, t):
     out = result.stdout
     
     match = re.search(r"Master Time Elapsed[^\d]+([\d\.]+)\s*seconds", out)
+    
+    # Dump verbose logs natively to terminal
+    print("\n" + out.strip() + "\n")
+    
     if match:
         return float(match.group(1))
     else:
