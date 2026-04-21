@@ -44,3 +44,7 @@ deploy_slaves:
 deploy_master:
 	@echo "Executing synchronized cross-network bandwidth benchmarking to PC #2..."
 	python3 item4_master.py
+
+deploy_swarm:
+	@echo "Initiating strict SSH cluster tunneling for UPLB Swarm array..."
+	python3 swarm_benchmark.py
